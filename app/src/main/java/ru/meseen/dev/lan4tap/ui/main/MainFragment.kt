@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.material.snackbar.Snackbar
 import ru.meseen.dev.lan4tap.R
 
 class MainFragment : Fragment() {
@@ -27,13 +28,17 @@ class MainFragment : Fragment() {
         savedInstanceState: Bundle?,
     ): View {
         val v = inflater.inflate(R.layout.main_fragment, container, false)
-        v.findViewById<TextView>(R.id.start).setOnClickListener {
+        v.findViewById<TextView>(R.id.connect).setOnClickListener {
+            Snackbar.make(it,"connect",Snackbar.LENGTH_LONG).show()
             viewModel.connect()
-            viewModel.sale(643)
+        }
+        v.findViewById<TextView>(R.id.start).setOnClickListener {
+            Snackbar.make(it,"sale",Snackbar.LENGTH_LONG).show()
+            viewModel.testHost()
         }
 
         v.findViewById<TextView>(R.id.stop).setOnClickListener {
-
+            Snackbar.make(it,"stop",Snackbar.LENGTH_LONG).show()
             viewModel.stop()
         }
 

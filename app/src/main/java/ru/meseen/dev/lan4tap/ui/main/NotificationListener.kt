@@ -13,7 +13,7 @@ class NotificationListener : INotificationCallback {
 
     var listener: PosNotification? = null
 
-    fun NotificationListener(listener: PosNotification?) {
+    fun callback(listener: PosNotification?) {
         this.listener = listener
     }
 
