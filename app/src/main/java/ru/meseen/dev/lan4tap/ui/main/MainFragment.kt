@@ -1,56 +1,93 @@
 package ru.meseen.dev.lan4tap.ui.main
 
+import android.app.ActivityManager
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import ru.meseen.dev.lan4tap.R
+import ru.meseen.dev.lan4tap.databinding.MainFragmentBinding
 
-class MainFragment : Fragment() {
+
+class MainFragment : Fragment(R.layout.main_fragment) {
 
     companion object {
         fun newInstance() = MainFragment()
     }
 
-    private lateinit var viewModel: MainViewModel
+    private val vb by viewBinding(MainFragmentBinding::bind)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
+    private val vm: MainViewModel by viewModels();
+
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        with(vb) {
+            startService.setOnClickListener {
+                startService()
+            }
+            stopService.setOnClickListener {
+                stopService()
+            }
+            restartService.setOnClickListener {
+                restartService()
+            }
+            isRunning.setOnClickListener {
+                Snackbar.make(it,"is Running ${isServiceRunning()}",Snackbar.LENGTH_LONG).show()
+            }
+
+            connect.setOnClickListener { vm.connect() }
+            testCommunication.setOnClickListener { vm.testCommunication() }
+            testHost.setOnClickListener { vm.testHost() }
+            selfTest.setOnClickListener { vm.selfTest() }
+            sale.setOnClickListener { vm.sale(300) }
+            stop.setOnClickListener { vm.stop() }
+            logos.setOnClickListener { logos.text = "" }
+        }
+
+        vm.notification.observe(viewLifecycleOwner) {
+            vb.logos.append("\n  $it")
+        }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        val v = inflater.inflate(R.layout.main_fragment, container, false)
-        v.findViewById<TextView>(R.id.connect).setOnClickListener {
-            Snackbar.make(it,"connect",Snackbar.LENGTH_LONG).show()
-            viewModel.connect()
-        }
-        v.findViewById<TextView>(R.id.start).setOnClickListener {
-            Snackbar.make(it,"sale",Snackbar.LENGTH_LONG).show()
-            viewModel.testHost()
-        }
+    private fun startService() {
+        val startServiceBroadcast = Intent("org.lanter.START_SERVICE")
+        requireActivity().sendBroadcast(startServiceBroadcast)
+    }
 
-        v.findViewById<TextView>(R.id.stop).setOnClickListener {
-            Snackbar.make(it,"stop",Snackbar.LENGTH_LONG).show()
-            viewModel.stop()
-        }
+    private fun stopService() {
+        val stopServiceBroadcast = Intent("org.lanter.STOP_SERVICE")
+        requireActivity().applicationContext.sendBroadcast(stopServiceBroadcast)
+    }
 
-        viewModel.notification.observe(viewLifecycleOwner) {
-            v.findViewById<TextView>(R.id.logos).append("\n  $it")
+    private fun isServiceRunning(): Boolean {
+        val manager =
+            requireActivity().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        manager.getRunningServices(Int.MAX_VALUE).onEach { serviceInfo ->
+            if (serviceInfo.service.className == "org.swcf.devices.HitsService") {
+                return true;
+            }
         }
+        return false
+    }
 
-        return v
+
+    private fun restartService() {
+        lifecycleScope.launch {
+            stopService()
+            delay(500)
+            startService()
+        }
     }
 
     fun onSale() {
-        viewModel.connect()
-        viewModel.sale(644)
+        vm.connect()
+        vm.sale(644)
     }
 }
