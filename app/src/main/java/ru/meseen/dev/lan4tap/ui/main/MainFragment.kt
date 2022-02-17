@@ -43,10 +43,12 @@ class MainFragment : Fragment(R.layout.main_fragment) {
             }
 
             connect.setOnClickListener { vm.connect() }
+            initial.setOnClickListener { vm.init() }
             testCommunication.setOnClickListener { vm.testCommunication() }
             testHost.setOnClickListener { vm.testHost() }
             selfTest.setOnClickListener { vm.selfTest() }
             sale.setOnClickListener { vm.sale(300) }
+            settlement.setOnClickListener { vm.settlement() }
             stop.setOnClickListener { vm.stop() }
             logos.setOnClickListener { logos.text = "" }
         }
@@ -84,10 +86,5 @@ class MainFragment : Fragment(R.layout.main_fragment) {
             delay(500)
             startService()
         }
-    }
-
-    fun onSale() {
-        vm.connect()
-        vm.sale(644)
     }
 }

@@ -87,7 +87,7 @@
                 android:id="@+id/flow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:constraint_referenced_ids="connect,testHost,testCommunication,selfTest,sale,stop"
+                app:constraint_referenced_ids="connect,testHost,initial,testCommunication,selfTest,sale,settlement,stop"
                 app:flow_maxElementsWrap="1"
                 app:flow_verticalGap="8dp"
                 app:flow_horizontalGap="4dp"
@@ -107,10 +107,23 @@
                 android:textSize="30sp" />
 
             <TextView
+                android:id="@+id/initial"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Initial"
+                android:textSize="40sp" />
+            <TextView
                 android:id="@+id/testHost"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="testHost"
+                android:textSize="40sp" />
+            <TextView
+                android:id="@+id/settlement"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAllCaps="true"
+                android:text="settlement"
                 android:textSize="40sp" />
             <TextView
                 android:id="@+id/testCommunication"

@@ -4,18 +4,17 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import org.lanter.lan4gate.Callbacks.ICommunicationCallback
 import org.lanter.lan4gate.Callbacks.INotificationCallback
-import org.lanter.lan4gate.Callbacks.IResponseCallback
 import org.lanter.lan4gate.Communication.CommunicationFactory
 import org.lanter.lan4gate.ILan4Gate
 import org.lanter.lan4gate.Lan4GateFactory
 import org.lanter.lan4gate.Messages.Notification.INotification
 import org.lanter.lan4gate.Messages.OperationsList
-import org.lanter.lan4gate.Messages.Response.IResponse
 
 
-class MainViewModel : ViewModel(),  ICommunicationCallback,
+class MainViewModel : ViewModel(), ICommunicationCallback,
     INotificationCallback {
 
     private val _notification = MutableLiveData<String>()
@@ -44,10 +43,12 @@ class MainViewModel : ViewModel(),  ICommunicationCallback,
         gate.addNotificationCallback(notificationListener)
         gate.addCommunicationCallback(this)
         gate.addResponseCallback { response, _ ->
-            Log.v("TAGu", "newMessage: $response" )
-            _notification.postValue("newMessage ${response.status}")
-            response.responseText?.let {  _notification.postValue("responseText $it") }
+            Log.v("TAGu", "newMessage: $response")
+            _notification.postValue("Response:Status ${response.status}")
+            response.responseText?.let { _notification.postValue("responseText $it") }
         }
+
+        viewModelScope
     }
 
     fun testHost() {
@@ -64,10 +65,10 @@ class MainViewModel : ViewModel(),  ICommunicationCallback,
         gate.sendRequest(test)
     }
 
-    fun selfTest(){
+    fun selfTest() {
         _notification.postValue("send SelfTest")
         val selfTest = gate.getPreparedRequest(OperationsList.SelfTest)
-        gate.ecrNumber = DEFAULT_ECR_NUMBER
+        selfTest.ecrNumber = DEFAULT_ECR_NUMBER
         gate.sendRequest(selfTest)
     }
 
@@ -82,6 +83,25 @@ class MainViewModel : ViewModel(),  ICommunicationCallback,
             ecrMerchantNumber = DEFAULT_ECR_MERCHANT_NUMBER
         }
         gate.sendRequest(sale)
+    }
+
+    fun settlement(){
+        gate.getPreparedRequest(OperationsList.Settlement).also { settlement ->
+                settlement.ecrNumber = DEFAULT_ECR_NUMBER
+                settlement.ecrMerchantNumber = DEFAULT_ECR_MERCHANT_NUMBER
+                gate.sendRequest(settlement)
+                _notification.postValue("send Settlement")
+            }
+    }
+
+    fun init() {
+        gate.apply {
+            _notification.postValue("send Initialization")
+            getPreparedRequest(OperationsList.Initialization).also { initi ->
+                initi.ecrNumber = DEFAULT_ECR_NUMBER
+                sendRequest(initi)
+            }
+        }
     }
 
     fun stop() {

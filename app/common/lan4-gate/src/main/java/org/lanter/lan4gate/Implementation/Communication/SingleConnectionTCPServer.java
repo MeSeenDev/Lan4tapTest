@@ -79,7 +79,9 @@ public class SingleConnectionTCPServer implements ICommunication {
                 {
                     sendData(key, extractData());
                 }
-            } catch (Exception ignored) { }
+            } catch (Exception e) {
+                Log.wtf("TAGu", "run: ", e );
+            }
             iterator.remove();
         }
     }

@@ -7,5 +7,9 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Lan4tapTest"
 include ':app'
+
 include ':lan4-gate'
 project(':lan4-gate').projectDir = file('app/common/lan4-gate/')
+
+include ':LAN-4Gate1_1_0'
+project(':LAN-4Gate1_1_0').projectDir = new File(rootDir, 'app/common/LAN-4Gate1_1_0/')
