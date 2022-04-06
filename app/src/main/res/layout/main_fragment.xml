@@ -32,7 +32,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_chainStyle="packed">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/startService"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -40,7 +40,7 @@
                     android:padding="8dp"
                     android:text="start" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/stopService"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -48,7 +48,7 @@
                     android:padding="8dp"
                     android:text="stop" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/restartService"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -72,7 +72,7 @@
                 app:layout_constraintVertical_chainStyle="packed">
 
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/isRunning"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -87,7 +87,7 @@
                 android:id="@+id/flow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:constraint_referenced_ids="connect,testHost,initial,testCommunication,selfTest,sale,settlement,stop"
+                app:constraint_referenced_ids="connect,testHost,initial,detail_report,testCommunication,selfTest,sale,settlement,stop"
                 app:flow_maxElementsWrap="1"
                 app:flow_verticalGap="8dp"
                 app:flow_horizontalGap="4dp"
@@ -111,6 +111,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Initial"
+                android:textSize="40sp" />
+            <TextView
+                android:id="@+id/detail_report"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Detail Report"
                 android:textSize="40sp" />
             <TextView
                 android:id="@+id/testHost"

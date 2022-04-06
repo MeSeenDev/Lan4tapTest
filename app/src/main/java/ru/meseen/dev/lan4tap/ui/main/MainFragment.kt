@@ -3,8 +3,13 @@ package ru.meseen.dev.lan4tap.ui.main
 import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
+import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+import android.text.style.ForegroundColorSpan
 import android.view.View
+import androidx.annotation.ColorInt
+import androidx.core.text.toSpannable
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -39,11 +44,12 @@ class MainFragment : Fragment(R.layout.main_fragment) {
                 restartService()
             }
             isRunning.setOnClickListener {
-                Snackbar.make(it,"is Running ${isServiceRunning()}",Snackbar.LENGTH_LONG).show()
+                Snackbar.make(it, "is Running ${isServiceRunning()}", Snackbar.LENGTH_LONG).show()
             }
 
             connect.setOnClickListener { vm.connect() }
-            initial.setOnClickListener { vm.init() }
+            initial.setOnClickListener { vm.initialization() }
+            detailReport.setOnClickListener { vm.printDetailReport() }
             testCommunication.setOnClickListener { vm.testCommunication() }
             testHost.setOnClickListener { vm.testHost() }
             selfTest.setOnClickListener { vm.selfTest() }
@@ -53,8 +59,24 @@ class MainFragment : Fragment(R.layout.main_fragment) {
             logos.setOnClickListener { logos.text = "" }
         }
 
-        vm.notification.observe(viewLifecycleOwner) {
-            vb.logos.append("\n  $it")
+        vm.notification.observe(viewLifecycleOwner) { log_line ->
+            if (log_line.contains("Error") || log_line.contains("Decline")) {
+                logosColorizeAppend(log_line, Color.RED)
+
+            } else if (log_line.contains("Success")) {
+                logosColorizeAppend(log_line, Color.GREEN)
+            } else {
+                vb.logos.append("\n  $log_line")
+            }
+        }
+    }
+
+    private fun logosColorizeAppend(log_line: String, @ColorInt color: Int) {
+        ForegroundColorSpan(color).apply { }
+        log_line.toSpannable().apply {
+            setSpan(ForegroundColorSpan(color), 0, log_line.length, SPAN_EXCLUSIVE_EXCLUSIVE)
+            vb.logos.append("\n  ")
+            vb.logos.append(this)
         }
     }
 

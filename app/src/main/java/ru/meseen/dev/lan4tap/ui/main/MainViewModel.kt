@@ -4,142 +4,139 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import org.lanter.lan4gate.Callbacks.ICommunicationCallback
-import org.lanter.lan4gate.Callbacks.INotificationCallback
-import org.lanter.lan4gate.Communication.CommunicationFactory
-import org.lanter.lan4gate.ILan4Gate
-import org.lanter.lan4gate.Lan4GateFactory
-import org.lanter.lan4gate.Messages.Notification.INotification
-import org.lanter.lan4gate.Messages.OperationsList
+import org.lanter.lan4gate.*
 
 
-class MainViewModel : ViewModel(), ICommunicationCallback,
-    INotificationCallback {
+class MainViewModel : ViewModel() {
 
     private val _notification = MutableLiveData<String>()
     val notification: LiveData<String> = _notification
 
-
-    private val notificationListener = NotificationListener().apply {
-        callback(object : PosNotification {
-            override fun send(message: String) {
-                _notification.postValue(message)
+    private var notificationCallBackID: Long = -1;
+    private val notificationCallBack by lazy {
+        object : INotificationCallback() {
+            override fun newData(notification: INotificationData?) {
+                _notification.postValue("newNotificationMessage: ${notification?.message}")
             }
-
-            override fun awaitPosFor(millis: Long) {
-
-            }
-
-        })
+        }
     }
-
-    private var server = CommunicationFactory.getSingleTCPServer(20501)
-    private var control = CommunicationFactory.getSizeControlDecorator(server)
-    private val gate by lazy { Lan4GateFactory.getLan4Gate(DEFAULT_ECR_NUMBER, control) }
-
-    fun connect() {
-        gate.start()
-        gate.addNotificationCallback(notificationListener)
-        gate.addCommunicationCallback(this)
-        gate.addResponseCallback { response, _ ->
-            Log.v("TAGu", "newMessage: $response")
-            _notification.postValue("Response:Status ${response.status}")
-            response.responseText?.let { _notification.postValue("responseText $it") }
+    private var connectionCallBackID: Long = -1;
+    private val connectionCallBack by lazy {
+        object : IConnectionCallback() {
+            override fun newState(isConnected: Boolean) {
+                if (isConnected) connected() else disconnected()
+            }
+        }
+    }
+    private var responseCallBackID: Long = -1;
+    private val responseCallBack =
+        object : IResponseCallback() {
+            override fun newData(response: IResponseData?) {
+                Log.v("TAGu", "newMessage: $response")
+                _notification.postValue("Response:Status ${response?.status}")
+                response?.responseText?.let { if (it.isNotBlank()) _notification.postValue("responseText $it") }
+                response?.responseCode?.let { if (it.isNotBlank()) _notification.postValue("responseCode $it") }
+            }
         }
 
-        viewModelScope
+
+    private val gate by lazy {
+        Lan4GateFactory.getLan4Gate(DEFAULT_ECR_NUMBER,
+            CommunicationFactory.getSingleTcpServer())
+    }
+
+    fun connect() {
+        _notification.postValue("Start")
+        notificationCallBackID = gate.addNotificationCallback(notificationCallBack)
+        connectionCallBackID = gate.addConnectionCallback(connectionCallBack)
+        responseCallBackID = gate.addResponseCallback(responseCallBack)
+        gate.ecrNumber = DEFAULT_ECR_NUMBER
+        gate.runOnThread()
+
     }
 
     fun testHost() {
         _notification.postValue("send Test")
-        val testHost = gate.getPreparedRequest(OperationsList.Test);
-        testHost.ecrNumber = DEFAULT_ECR_NUMBER;
-        gate.sendRequest(testHost);
+        gate.send(OperationCode.Test)
     }
 
     fun testCommunication() {
         _notification.postValue("send TestCommunication")
-        val test = gate.getPreparedRequest(OperationsList.TestCommunication)
-        gate.ecrNumber = DEFAULT_ECR_NUMBER
-        gate.sendRequest(test)
+        gate.send(OperationCode.TestCommunication)
     }
 
     fun selfTest() {
         _notification.postValue("send SelfTest")
-        val selfTest = gate.getPreparedRequest(OperationsList.SelfTest)
-        selfTest.ecrNumber = DEFAULT_ECR_NUMBER
-        gate.sendRequest(selfTest)
+        gate.send(OperationCode.SelfTest)
     }
 
     fun sale(
         price: Int,
     ) {
         _notification.postValue("send Sale")
-        val sale = gate.getPreparedRequest(OperationsList.Sale).apply {
-            amount = price.toLong()
-            currencyCode = DEFAULT_CURRENCY_CODE
-            ecrNumber = DEFAULT_ECR_NUMBER
-            ecrMerchantNumber = DEFAULT_ECR_MERCHANT_NUMBER
-        }
-        gate.sendRequest(sale)
-    }
-
-    fun settlement(){
-        gate.getPreparedRequest(OperationsList.Settlement).also { settlement ->
-                settlement.ecrNumber = DEFAULT_ECR_NUMBER
-                settlement.ecrMerchantNumber = DEFAULT_ECR_MERCHANT_NUMBER
-                gate.sendRequest(settlement)
-                _notification.postValue("send Settlement")
-            }
-    }
-
-    fun init() {
         gate.apply {
-            _notification.postValue("send Initialization")
-            getPreparedRequest(OperationsList.Initialization).also { initi ->
-                initi.ecrNumber = DEFAULT_ECR_NUMBER
-                sendRequest(initi)
+            val sale = gate.getReq(OperationCode.Sale).apply {
+                amount = price.toLong()
+                currencyCode = DEFAULT_CURRENCY_CODE
             }
+            sendMessage(sale)
         }
     }
+
+    fun settlement() {
+        gate.send(OperationCode.Settlement)
+        _notification.postValue("send Settlement")
+    }
+
+    fun initialization() {
+        _notification.postValue("send Initialization")
+        gate.send(OperationCode.Initialization)
+    }
+
+    fun printDetailReport() {
+        _notification.postValue("send PrintDetailReport")
+        gate.send(OperationCode.PrintDetailReport)
+    }
+
+    private fun ILan4Gate.send(operationCode: OperationCode) {
+        getPreparedRequest(operationCode).also { operation ->
+            operation.ecrNumber = DEFAULT_ECR_NUMBER
+            operation.ecrMerchantNumber = DEFAULT_ECR_MERCHANT_NUMBER
+            sendMessage(operation)
+        }
+    }
+
+    private fun ILan4Gate.getReq(operationCode: OperationCode) =
+        getPreparedRequest(operationCode).apply {
+            ecrMerchantNumber = DEFAULT_ECR_MERCHANT_NUMBER
+            ecrNumber = DEFAULT_ECR_NUMBER
+        }
 
     fun stop() {
-        gate.stop()
+        _notification.postValue("stop")
+        _notification.postValue("stop:Status ${gate.stop().name}")
+        if(notificationCallBackID != -1L )_notification.postValue("notificationCallBack removed ${ gate.removeNotificationCallback(notificationCallBackID)}")
+        if(notificationCallBackID != -1L )_notification.postValue("connectionCallBack removed ${ gate.removeConnectionCallback(connectionCallBackID)}")
+        if(notificationCallBackID != -1L )_notification.postValue("responseCallBack removed ${ gate.removeResponseCallback(responseCallBackID)}")
     }
 
     companion object {
         private const val TAG = "MainViewModel"
-        private const val DEFAULT_ECR_NUMBER = 1
-        private const val DEFAULT_ECR_MERCHANT_NUMBER = 1
-        private const val DEFAULT_CURRENCY_CODE = 643
+        private const val DEFAULT_ECR_NUMBER: Short = 1
+        private const val DEFAULT_ECR_MERCHANT_NUMBER: Short = 1
+        private const val DEFAULT_CURRENCY_CODE = "643"
 
     }
 
 
-    override fun communicationStarted(initiator: ILan4Gate?) {
-        Log.wtf(TAG, "communicationStarted: ")
-        _notification.postValue("communicationStarted: ")
-    }
-
-    override fun communicationStopped(initiator: ILan4Gate?) {
-        Log.wtf(TAG, "communicationStopped: ")
-        _notification.postValue("communicationStopped: ")
-    }
-
-    override fun connected(initiator: ILan4Gate?) {
+    fun connected() {
         Log.wtf(TAG, "connected: ")
-        _notification.postValue("connected: ")
+        _notification.postValue("connection established: ")
     }
 
-    override fun disconnected(initiator: ILan4Gate?) {
+    fun disconnected() {
         Log.wtf(TAG, "disconnected: ")
-        _notification.postValue("disconnected: ")
-    }
-
-    override fun newNotificationMessage(notification: INotification?, initiator: ILan4Gate?) {
-        Log.wtf(TAG, "newNotificationMessage: ")
-        _notification.postValue("newNotificationMessage: ${notification?.message}")
+        _notification.postValue("connection is lost")
     }
 
 
