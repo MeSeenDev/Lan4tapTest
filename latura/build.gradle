@@ -1,34 +1,23 @@
 plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
 }
 
 android {
     compileSdk 31
 
     defaultConfig {
-        applicationId "ru.meseen.dev.lan4tap"
-        minSdk 22
+        minSdk 17
         targetSdk 31
-        versionCode 1
-        versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
     }
-
-    flavorDimensions "Device"
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-    productFlavors {
-        urovo{
-            ndk {
-                abiFilter "armeabi"
-            }
         }
     }
     compileOptions {
@@ -38,32 +27,19 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    buildFeatures {
-        viewBinding true
-    }
 }
+
 dependencies {
-    
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
-    implementation 'androidx.fragment:fragment-ktx:1.4.1'
 
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.1'
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.1'
-
-    implementation 'com.github.kirich1409:viewbindingpropertydelegate-noreflection:1.5.6'
-
-    // implementation 'com.github.LanterECR:LAN-4GateLibrary:v1.1.0'
-    // implementation project(path: ':LAN-4Gate1_1_0')
-    //implementation project(path: ':lan4-gate')
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.1")
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
-
-
 }

@@ -12,8 +12,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/app/common/LAN-4Gate1_1_0" />
-            <option value="$PROJECT_DIR$/app/common/lan4-gate" />
+            <option value="$PROJECT_DIR$/latura" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />
